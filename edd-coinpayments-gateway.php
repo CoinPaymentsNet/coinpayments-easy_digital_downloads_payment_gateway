@@ -178,7 +178,7 @@ if (!class_exists('EDD_CoinPayments')) {
                     );
                     $coinpayments_args = apply_filters('edd_coinpayments_redirect_args', $coinpayments_args, $purchase_data);
                     $coinpayments_args = http_build_query($coinpayments_args, '', '&');
-                    $redirect_url = sprintf('%s/%s/?%s', Coinpayments_API_Handler::API_URL, Coinpayments_API_Handler::API_CHECKOUT_ACTION, $coinpayments_args);
+                    $redirect_url = sprintf('%s/%s/?%s', Coinpayments_API_Handler::CHECKOUT_URL, Coinpayments_API_Handler::API_CHECKOUT_ACTION, $coinpayments_args);
                     edd_empty_cart();
                     wp_redirect($redirect_url);
 
@@ -219,7 +219,7 @@ if (!class_exists('EDD_CoinPayments')) {
                     } elseif ($request_data['invoice']['status'] == 'Completed') {
                         edd_update_payment_status($invoice_id, 'publish');
                     } elseif ($request_data['invoice']['status'] == 'Cancelled') {
-                        edd_update_payment_status($invoice_id, 'cancelled');
+                        edd_update_payment_status($invoice_id, 'revoked');
                     }
                 }
             }
