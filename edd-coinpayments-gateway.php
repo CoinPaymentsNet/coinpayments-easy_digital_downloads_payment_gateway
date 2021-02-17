@@ -145,6 +145,16 @@ if (!class_exists('EDD_CoinPayments')) {
                 'status' => 'pending'
             );
 
+            $billing_data = array(
+                'company' => get_bloginfo('name'),
+                'first_name' => $purchase_data['user_info']['first_name'],
+                'last_name' => $purchase_data['user_info']['last_name'],
+                'email' => $purchase_data['user_info']['email'],
+                'address' => $purchase_data['user_info']['address']
+            );
+
+
+
             $payment = edd_insert_payment($payment_data);
 
             if (!$payment) {
@@ -167,7 +177,22 @@ if (!class_exists('EDD_CoinPayments')) {
                     $amount = intval(number_format($purchase_data['price'], $coin_currency['decimalPlaces'], '', ''));
                     $display_value = $purchase_data['price'];
 
-                    $invoice = $this->coinpayments->create_invoice($invoice_id, $coin_currency['id'], $amount, $display_value);
+                    $notes_link = sprintf(
+                        "%s|Store name: %s|Order #%s",
+                        admin_url('edit.php?post_type=download&page=edd-payment-history&view=view-order-details&id='. $payment),
+                        get_bloginfo('name'),
+                        $payment);
+
+                    $invoice_params = array(
+                        'invoice_id' => $invoice_id,
+                        'currency_id' => $coin_currency['id'],
+                        'amount' => $amount,
+                        'display_value' => $display_value,
+                        'billing_data' => $billing_data,
+                        'notes_link' => $notes_link
+                    );
+
+                    $invoice = $this->coinpayments->create_invoice($invoice_params);
                     if (edd_get_option('edd_coinpayments_webhooks', '-1') == '1') {
                         $invoice = array_shift($invoice['invoices']);
                     }
