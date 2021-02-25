@@ -41,6 +41,13 @@ if (!class_exists('EDD_CoinPayments')) {
             $this->setup();
             $this->filters();
             $this->actions();
+
+            $coinpayments_link = sprintf(
+                '<a href="%s" target="_blank" title="CoinPayments.net">CoinPayments.net</a>',
+                esc_url('https://alpha.coinpayments.net/')
+            );
+            $coin_description = 'Pay with Bitcoin, Litecoin, or other altcoins via ';
+            $this->description = sprintf('%s<br/>%s<br/>%s', get_option('description'), $coin_description, $coinpayments_link);
         }
 
 
@@ -147,6 +154,8 @@ if (!class_exists('EDD_CoinPayments')) {
 
             $payment = edd_insert_payment($payment_data);
 
+            $this->coinpayments->check_webhook();
+
             if (!$payment) {
                 edd_record_gateway_error(__('Payment Error', 'edd-coinpayments'), sprintf(__('Payment creation failed before sending buyer to CoinPayments. Payment data: %s', 'edd-coinpayments'), json_encode($payment_data)), $payment);
                 edd_send_back_to_checkout('?payment-mode=' . $purchase_data['post_data']['edd-gateway']);
@@ -167,7 +176,22 @@ if (!class_exists('EDD_CoinPayments')) {
                     $amount = intval(number_format($purchase_data['price'], $coin_currency['decimalPlaces'], '', ''));
                     $display_value = $purchase_data['price'];
 
-                    $invoice = $this->coinpayments->create_invoice($invoice_id, $coin_currency['id'], $amount, $display_value);
+                    $notes_link = sprintf(
+                        "%s|Store name: %s|Order #%s",
+                        admin_url('edit.php?post_type=download&page=edd-payment-history&view=view-order-details&id='. $payment),
+                        get_bloginfo('name'),
+                        $payment);
+
+                    $invoice_params = array(
+                        'invoice_id' => $invoice_id,
+                        'currency_id' => $coin_currency['id'],
+                        'amount' => $amount,
+                        'display_value' => $display_value,
+                        'billing_data' => $purchase_data,
+                        'notes_link' => $notes_link
+                    );
+
+                    $invoice = $this->coinpayments->create_invoice($invoice_params);
                     if (edd_get_option('edd_coinpayments_webhooks', '-1') == '1') {
                         $invoice = array_shift($invoice['invoices']);
                     }
@@ -214,9 +238,7 @@ if (!class_exists('EDD_CoinPayments')) {
 
                 if ($host_hash == md5(get_site_url())) {
 
-                    if ($request_data['invoice']['status'] == 'Pending') {
-                        edd_update_payment_status($invoice_id, 'pending');
-                    } elseif ($request_data['invoice']['status'] == 'Completed') {
+                    if ($request_data['invoice']['status'] == 'Completed') {
                         edd_update_payment_status($invoice_id, 'publish');
                     } elseif ($request_data['invoice']['status'] == 'Cancelled') {
                         edd_update_payment_status($invoice_id, 'revoked');
