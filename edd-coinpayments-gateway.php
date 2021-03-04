@@ -48,11 +48,23 @@ if (!class_exists('EDD_CoinPayments')) {
         {
             $gateways['coinpayments'] = array(
                 'admin_label' => 'CoinPayments.NET',
-                'checkout_label' => __('CoinPayments - Pay with Bitcoin, Litecoin, or other cryptocurrencies', 'edd-coinpayments-gateway'),
+                'checkout_label' => __('CoinPayments', 'edd-coinpayments-gateway'),
                 'supports' => array(),
             );
 
             return $gateways;
+        }
+
+        protected function add_description()
+        {
+            ?><script type="text/JavaScript">
+            var label = document.getElementById('edd-gateway-option-coinpayments');
+            var element = document.createElement("div");
+            element.id = 'description';
+            element.innerHTML = '<br>Pay with Bitcoin, Litecoin, or other cryptocurrencies via <a href="https://alpha.coinpayments.net/" target="_blank" style="text-decoration: underline; font-weight: bold;" title="CoinPayments.net">CoinPayments.net</a></br><br>';
+            if(!document.getElementById("description"))
+                label.appendChild(element);
+            </script><?php
         }
 
         public function register_gateway_settings($gateway_settings)
@@ -124,6 +136,7 @@ if (!class_exists('EDD_CoinPayments')) {
 
         public function register_payment_icon($payment_icons)
         {
+            $this->add_description();
             $payment_icons[plugin_dir_url(__FILE__) . 'icons/coinpayments.png'] = 'Coinpayments';
             return $payment_icons;
         }
@@ -167,7 +180,22 @@ if (!class_exists('EDD_CoinPayments')) {
                     $amount = intval(number_format($purchase_data['price'], $coin_currency['decimalPlaces'], '', ''));
                     $display_value = $purchase_data['price'];
 
-                    $invoice = $this->coinpayments->create_invoice($invoice_id, $coin_currency['id'], $amount, $display_value);
+                    $notes_link = sprintf(
+                        "%s|Store name: %s|Order #%s",
+                        admin_url('edit.php?post_type=download&page=edd-payment-history&view=view-order-details&id='. $payment),
+                        get_bloginfo('name'),
+                        $payment);
+
+                    $invoice_params = array(
+                        'invoice_id' => $invoice_id,
+                        'currency_id' => $coin_currency['id'],
+                        'amount' => $amount,
+                        'display_value' => $display_value,
+                        'billing_data' => $purchase_data,
+                        'notes_link' => $notes_link
+                    );
+
+                    $invoice = $this->coinpayments->create_invoice($invoice_params);
                     if (edd_get_option('edd_coinpayments_webhooks', '-1') == '1') {
                         $invoice = array_shift($invoice['invoices']);
                     }
@@ -214,9 +242,7 @@ if (!class_exists('EDD_CoinPayments')) {
 
                 if ($host_hash == md5(get_site_url())) {
 
-                    if ($request_data['invoice']['status'] == 'Pending') {
-                        edd_update_payment_status($invoice_id, 'pending');
-                    } elseif ($request_data['invoice']['status'] == 'Completed') {
+                    if ($request_data['invoice']['status'] == 'Completed') {
                         edd_update_payment_status($invoice_id, 'publish');
                     } elseif ($request_data['invoice']['status'] == 'Cancelled') {
                         edd_update_payment_status($invoice_id, 'revoked');
@@ -249,6 +275,7 @@ if (!class_exists('EDD_CoinPayments')) {
 
             add_filter('edd_payment_gateways', array($this, 'register_gateway'));
             add_filter('edd_accepted_payment_icons', array($this, 'register_payment_icon'), 10, 1);
+            add_filter('edd_settings_taxes_sanitize', 'edd_settings_sanitize_taxes' );
 
             if (is_admin()) {
                 add_filter('edd_settings_sections_gateways', array($this, 'register_gateway_section'), 1, 1);
