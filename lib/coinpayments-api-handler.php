@@ -17,7 +17,7 @@ class Coinpayments_API_Handler
     const API_CHECKOUT_ACTION = 'checkout';
     const FIAT_TYPE = 'fiat';
 
-    const PAID_EVENT = 'Paid';
+    const PAID_EVENT = 'Created';
     const CANCELLED_EVENT = 'Cancelled';
 
     /**
