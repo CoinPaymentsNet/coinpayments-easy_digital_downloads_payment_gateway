@@ -55,11 +55,23 @@ if (!class_exists('EDD_CoinPayments')) {
         {
             $gateways['coinpayments'] = array(
                 'admin_label' => 'CoinPayments.NET',
-                'checkout_label' => __('CoinPayments - Pay with Bitcoin, Litecoin, or other cryptocurrencies', 'edd-coinpayments-gateway'),
+                'checkout_label' => __('CoinPayments', 'edd-coinpayments-gateway'),
                 'supports' => array(),
             );
 
             return $gateways;
+        }
+
+        protected function add_description()
+        {
+            ?><script type="text/JavaScript">
+            var label = document.getElementById('edd-gateway-option-coinpayments');
+            var element = document.createElement("div");
+            element.id = 'description';
+            element.innerHTML = '<br>Pay with Bitcoin, Litecoin, or other cryptocurrencies via <a href="https://alpha.coinpayments.net/" target="_blank" style="text-decoration: underline; font-weight: bold;" title="CoinPayments.net">CoinPayments.net</a></br><br>';
+            if(!document.getElementById("description"))
+                label.appendChild(element);
+            </script><?php
         }
 
         public function register_gateway_settings($gateway_settings)
@@ -131,6 +143,7 @@ if (!class_exists('EDD_CoinPayments')) {
 
         public function register_payment_icon($payment_icons)
         {
+            $this->add_description();
             $payment_icons[plugin_dir_url(__FILE__) . 'icons/coinpayments.png'] = 'Coinpayments';
             return $payment_icons;
         }
@@ -271,6 +284,7 @@ if (!class_exists('EDD_CoinPayments')) {
 
             add_filter('edd_payment_gateways', array($this, 'register_gateway'));
             add_filter('edd_accepted_payment_icons', array($this, 'register_payment_icon'), 10, 1);
+            add_filter('edd_settings_taxes_sanitize', 'edd_settings_sanitize_taxes' );
 
             if (is_admin()) {
                 add_filter('edd_settings_sections_gateways', array($this, 'register_gateway_section'), 1, 1);
