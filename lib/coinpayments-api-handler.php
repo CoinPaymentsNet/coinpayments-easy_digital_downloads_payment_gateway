@@ -17,6 +17,9 @@ class Coinpayments_API_Handler
     const API_CHECKOUT_ACTION = 'checkout';
     const FIAT_TYPE = 'fiat';
 
+    const PAID_EVENT = 'Paid';
+    const CANCELLED_EVENT = 'Cancelled';
+
     /**
      * @var string
      */
@@ -60,8 +63,13 @@ class Coinpayments_API_Handler
                     return $webHook['notificationsUrl'];
                 }, $webhooks_list['items']);
             }
-            if (!in_array($this->get_notification_url(), $webhooks_urls_list)) {
-                if ($this->create_webhook()) {
+            if (!in_array($this->get_notification_url(self::PAID_EVENT), $webhooks_urls_list)) {
+                if ($this->create_webhook(self::PAID_EVENT)) {
+                    $exists = true;
+                }
+            }
+            if (!in_array($this->get_notification_url(self::CANCELLED_EVENT), $webhooks_urls_list)) {
+                if ($this->create_webhook(self::CANCELLED_EVENT)) {
                     $exists = true;
                 }
             } else {
@@ -75,19 +83,15 @@ class Coinpayments_API_Handler
      * @return bool|mixed
      * @throws Exception
      */
-    public function create_webhook()
+    public function create_webhook($event = false)
     {
 
         $action = sprintf(self::API_WEBHOOK_ACTION, $this->client_id);
 
         $params = array(
-            "notificationsUrl" => $this->get_notification_url(),
+            "notificationsUrl" => $this->get_notification_url($event),
             "notifications" => [
-                "invoiceCreated",
-                "invoicePending",
-                "invoicePaid",
-                "invoiceCompleted",
-                "invoiceCancelled",
+                sprintf("invoice%s", $event),
             ],
         );
 
@@ -193,25 +197,22 @@ class Coinpayments_API_Handler
     protected function append_billing_data($request_params, $billing_data)
     {
         $request_params['buyer'] = array(
-            'companyName' => $billing_data['company'],
+            'companyName' => get_bloginfo('name'),
             'name' => array(
-                'firstName' => $billing_data['first_name'],
-                'lastName' => $billing_data['last_name']
+                'firstName' => $billing_data['user_info']['first_name'],
+                'lastName' => $billing_data['user_info']['last_name']
             ),
-            'emailAddress' => $billing_data['email'],
+            'emailAddress' => $billing_data['user_info']['email'],
         );
 
-        if (!empty($billing_data['address']) &&
-            !empty($billing_data['city']) &&
-            preg_match('/^([A-Z]{2})$/', $billing_data['country']))
+        if (!empty($billing_data['user_info']['address']))
         {
             $request_params['buyer']['address'] = array(
-                'address1' => $billing_data['address']['address_1'],
-                'address2' => $billing_data['address']['address_2'],
-                'provinceOrState' => $billing_data['address']['state'],
-                'city' => $billing_data['address']['city'],
-                'countryCode' => $billing_data['address']['country'],
-                'postalCode' => $billing_data['address']['postcode']
+                'address1' => $billing_data['user_info']['address']['address1'],
+                'provinceOrState' => $billing_data['user_info']['address']['state'],
+                'city' => $billing_data['user_info']['address']['city'],
+                'countryCode' => $billing_data['user_info']['address']['country'],
+                'postalCode' => $billing_data['user_info']['address']['postcode']
             );
         }
         return $request_params;
@@ -240,9 +241,13 @@ class Coinpayments_API_Handler
      * @param $gateway_id
      * @return string
      */
-    protected function get_notification_url()
+    protected function get_notification_url($event = false)
     {
-        return trailingslashit(home_url()) . '?edd-listener=coinpayments';
+        $url = trailingslashit(home_url()) . '?edd-listener=coinpayments';
+        $url = add_query_arg('clientId', $this->client_id, $url);
+        $url = add_query_arg('event', $event, $url);
+
+        return $url;
     }
 
     /**
