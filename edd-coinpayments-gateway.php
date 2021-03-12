@@ -41,13 +41,6 @@ if (!class_exists('EDD_CoinPayments')) {
             $this->setup();
             $this->filters();
             $this->actions();
-
-            $coinpayments_link = sprintf(
-                '<a href="%s" target="_blank" title="CoinPayments.net">CoinPayments.net</a>',
-                esc_url('https://alpha.coinpayments.net/')
-            );
-            $coin_description = 'Pay with Bitcoin, Litecoin, or other altcoins via ';
-            $this->description = sprintf('%s<br/>%s<br/>%s', get_option('description'), $coin_description, $coinpayments_link);
         }
 
 
@@ -55,11 +48,22 @@ if (!class_exists('EDD_CoinPayments')) {
         {
             $gateways['coinpayments'] = array(
                 'admin_label' => 'CoinPayments.NET',
-                'checkout_label' => __('CoinPayments - Pay with Bitcoin, Litecoin, or other cryptocurrencies', 'edd-coinpayments-gateway'),
+                'checkout_label' => __('CoinPayments', 'edd-coinpayments-gateway'),
                 'supports' => array(),
             );
 
             return $gateways;
+        }
+
+        public function add_description()
+        {
+            $page_id = 5;
+
+            if ( is_page( $page_id ) ) {
+                $a = plugin_dir_url( __FILE__ );
+                wp_register_script('description_coinpayments', plugin_dir_url( __FILE__ ).'description_coinpayments.js', array('jquery'), EDD_VERSION, false);
+                wp_enqueue_script('description_coinpayments');
+            }
         }
 
         public function register_gateway_settings($gateway_settings)
@@ -153,8 +157,6 @@ if (!class_exists('EDD_CoinPayments')) {
             );
 
             $payment = edd_insert_payment($payment_data);
-
-            $this->coinpayments->check_webhook();
 
             if (!$payment) {
                 edd_record_gateway_error(__('Payment Error', 'edd-coinpayments'), sprintf(__('Payment creation failed before sending buyer to CoinPayments. Payment data: %s', 'edd-coinpayments'), json_encode($payment_data)), $payment);
@@ -271,6 +273,7 @@ if (!class_exists('EDD_CoinPayments')) {
 
             add_filter('edd_payment_gateways', array($this, 'register_gateway'));
             add_filter('edd_accepted_payment_icons', array($this, 'register_payment_icon'), 10, 1);
+            add_filter('edd_settings_taxes_sanitize', 'edd_settings_sanitize_taxes' );
 
             if (is_admin()) {
                 add_filter('edd_settings_sections_gateways', array($this, 'register_gateway_section'), 1, 1);
@@ -293,15 +296,12 @@ if (!class_exists('EDD_CoinPayments')) {
 
         protected function actions()
         {
-
             add_action('init', array($this, 'edd_listen_for_coinpayments_notifications'));
-
             add_action('edd_coinpayments_cc_form', '__return_false');
-
             add_action('edd_gateway_coinpayments', array($this, 'process_payment'));
             add_action('process_coinpayments_notification', array($this, 'process_notification'));
-
             add_action('edd_after_cc_fields', array($this, 'errors_div'), 999);
+            add_action('wp_enqueue_scripts', array($this, 'add_description' ), 10);
         }
 
     }
