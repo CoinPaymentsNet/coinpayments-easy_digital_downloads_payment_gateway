@@ -57,11 +57,9 @@ if (!class_exists('EDD_CoinPayments')) {
 
         public function add_description()
         {
-            $page_id = 5;
-
-            if ( is_page( $page_id ) ) {
-                $a = plugin_dir_url( __FILE__ );
-                wp_register_script('description_coinpayments', plugin_dir_url( __FILE__ ).'description_coinpayments.js', array('jquery'), EDD_VERSION, false);
+            if (edd_is_checkout()) {
+                $a = plugin_dir_url(__FILE__);
+                wp_register_script('description_coinpayments', plugin_dir_url(__FILE__) . 'description_coinpayments.js', array('jquery'), EDD_VERSION, false);
                 wp_enqueue_script('description_coinpayments');
             }
         }
@@ -157,6 +155,8 @@ if (!class_exists('EDD_CoinPayments')) {
             );
 
             $payment = edd_insert_payment($payment_data);
+
+            $this->coinpayments->check_webhook();
 
             if (!$payment) {
                 edd_record_gateway_error(__('Payment Error', 'edd-coinpayments'), sprintf(__('Payment creation failed before sending buyer to CoinPayments. Payment data: %s', 'edd-coinpayments'), json_encode($payment_data)), $payment);
