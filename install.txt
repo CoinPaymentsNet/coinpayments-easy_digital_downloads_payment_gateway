@@ -1,0 +1,20 @@
+=== CoinPayments.net Payment Gateway for Easy Digital Downloads ===
+Contributors: CoinPayments, woothemes, mikejolley, jameskoster, CoenJacobs
+Tags: bitcoin, litecoin, altcoins, altcoin, dogecoin, feathercoin, netcoin, peercoin, blackcoin, darkcoin, ripple, ethereum, ether, woocommerce
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+
+== Description ==
+
+This plugin implements a payment gateway for Easy Digital Downloads to let buyers pay with Bitcoin, Litecoin, Ripple, and other cryptocurrencies via CoinPayments.net.
+
+== Installation ==
+
+1. Upload files to the `/wp-content/plugins/easy-digital-downloads-coinpayments-gateway` directory.
+2. Activate the plugin through the 'Plugins' menu in WordPress.
+3. In the Easy Digital Downloads Settings page go to the Payment Gateways tab.
+4. Check "CoinPayments.net" in Payment Gateways list.
+5. Go to "CoinPayments.net" section tab.
+6. Enter your CoinPayments.net Client ID.
+7. Select "Enable Webhooks" and enter your Client Secret to use CoinPayments.NET webhooks.
+8. Click "Save changes" and the gateway will be active.
