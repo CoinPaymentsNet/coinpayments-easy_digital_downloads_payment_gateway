@@ -230,19 +230,17 @@ if (!class_exists('EDD_CoinPayments')) {
             $content = file_get_contents('php://input');
 
             $request_data = json_decode($content, true);
-
-            if ($this->coinpayments->check_data_signature($signature, $content) && isset($request_data['invoice']['invoiceId'])) {
+            if ($this->coinpayments->check_data_signature($signature, $content, $request_data['invoice']['status']) && isset($request_data['invoice']['invoiceId'])) {
                 $invoice_str = $request_data['invoice']['invoiceId'];
                 $invoice_str = explode('|', $invoice_str);
 
                 $host_hash = array_shift($invoice_str);
                 $invoice_id = array_shift($invoice_str);
-
                 if ($host_hash == md5(get_site_url())) {
 
-                    if ($request_data['invoice']['status'] == 'Completed') {
+                    if ($request_data['invoice']['status'] == Coinpayments_API_Handler::PAID_EVENT) {
                         edd_update_payment_status($invoice_id, 'publish');
-                    } elseif ($request_data['invoice']['status'] == 'Cancelled') {
+                    } elseif ($request_data['invoice']['status'] == Coinpayments_API_Handler::CANCELLED_EVENT) {
                         edd_update_payment_status($invoice_id, 'revoked');
                     }
                 }
