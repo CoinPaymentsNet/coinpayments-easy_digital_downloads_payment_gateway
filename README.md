@@ -8,4 +8,12 @@ Demonstration Website Disclaimer: The information presented on alpha.coinpayment
 
 In no event will CoinPayments Inc. or its directors, officers, employees, shareholders, service providers or agents, be liable to you, or anyone else, for any decision(s) made or action(s) taken in reliance upon the information contained in the Demo Site, nor for any direct, indirect, incidental, special, exemplary, punitive, consequential, or other damages whatsoever (including, but not limited to, liability for loss of use, funds, data or profits) whether in an action of contract, statute, tort or otherwise, relating to the use of the Demo Site."
 
-# coinpayments-easy_digital_downloads_payment_gateway
+# Follow the steps below to download this plugin:  
+
+1. Log into your https://alpha.coinpayments.net/ account
+2. Click on Business Tools -> Intergrations -> Pre-built Plugins -> + add Intergration button
+3. Select this plug-in from the dropdown menu
+4. Click the download plugin button  
+
+
+![Screenshot_1уфын](https://user-images.githubusercontent.com/78020458/121875411-17a8ab00-cd11-11eb-82b7-aa4cc0e0054b.jpg)
