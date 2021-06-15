@@ -182,6 +182,7 @@ class Coinpayments_API_Handler
                 "displayValue" => $invoice_params['display_value'],
                 'value' => $invoice_params['amount']
             ],
+            'requireBuyerNameAndEmail' => true,
             'notesToRecipient' => $invoice_params['notes_link']
         );
 
