@@ -173,7 +173,11 @@ if (!class_exists('EDD_CoinPayments')) {
                 try {
 
                     $currency_code = edd_get_currency();
-                    $coin_currency = $this->coinpayments->get_coin_currency($currency_code);
+                    if (!($coin_currency = $this->coinpayments->get_coin_currency($currency_code))) {
+                        $currencies = new Coinpayments_Currencies_API_Handler();
+                        $coin_currency = $currencies->get_coin_crypto_currencies($currency_code);
+                        $coin_currency = array_shift($coin_currency);
+                    }
 
                     $amount = intval(number_format($purchase_data['price'], $coin_currency['decimalPlaces'], '', ''));
                     $display_value = $purchase_data['price'];
@@ -230,19 +234,17 @@ if (!class_exists('EDD_CoinPayments')) {
             $content = file_get_contents('php://input');
 
             $request_data = json_decode($content, true);
-
-            if ($this->coinpayments->check_data_signature($signature, $content) && isset($request_data['invoice']['invoiceId'])) {
+            if ($this->coinpayments->check_data_signature($signature, $content, $request_data['invoice']['status']) && isset($request_data['invoice']['invoiceId'])) {
                 $invoice_str = $request_data['invoice']['invoiceId'];
                 $invoice_str = explode('|', $invoice_str);
 
                 $host_hash = array_shift($invoice_str);
                 $invoice_id = array_shift($invoice_str);
-
                 if ($host_hash == md5(get_site_url())) {
 
-                    if ($request_data['invoice']['status'] == 'Completed') {
+                    if ($request_data['invoice']['status'] == Coinpayments_API_Handler::PAID_EVENT) {
                         edd_update_payment_status($invoice_id, 'publish');
-                    } elseif ($request_data['invoice']['status'] == 'Cancelled') {
+                    } elseif ($request_data['invoice']['status'] == Coinpayments_API_Handler::CANCELLED_EVENT) {
                         edd_update_payment_status($invoice_id, 'revoked');
                     }
                 }

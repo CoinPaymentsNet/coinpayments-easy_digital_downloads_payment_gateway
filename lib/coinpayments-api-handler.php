@@ -147,10 +147,10 @@ class Coinpayments_API_Handler
      * @param $content
      * @return bool
      */
-    public function check_data_signature($signature, $content)
+    public function check_data_signature($signature, $content, $event)
     {
 
-        $request_url = $this->get_notification_url();
+        $request_url = $this->get_notification_url($event);
         $signature_string = sprintf('%s%s', $request_url, $content);
         $encoded_pure = $this->encode_signature_string($signature_string, $this->client_secret);
         return $signature == $encoded_pure;
@@ -182,6 +182,7 @@ class Coinpayments_API_Handler
                 "displayValue" => $invoice_params['display_value'],
                 'value' => $invoice_params['amount']
             ],
+            'requireBuyerNameAndEmail' => true,
             'notesToRecipient' => $invoice_params['notes_link']
         );
 
