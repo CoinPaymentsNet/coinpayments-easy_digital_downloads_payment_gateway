@@ -1,3 +1,5 @@
+> NOTICE: Migrated to [CoinPaymentsNet/plugin-easy-digital-downloads](https://github.com/CoinPaymentsNet/plugin-easy-digital-downloads).
+
 IMPORTANT NOTE:
 
 This is only for use with: https://alpha.coinpayments.net/
