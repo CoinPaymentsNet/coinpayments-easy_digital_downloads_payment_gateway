@@ -173,7 +173,11 @@ if (!class_exists('EDD_CoinPayments')) {
                 try {
 
                     $currency_code = edd_get_currency();
-                    $coin_currency = $this->coinpayments->get_coin_currency($currency_code);
+                    if (!($coin_currency = $this->coinpayments->get_coin_currency($currency_code))) {
+                        $currencies = new Coinpayments_Currencies_API_Handler();
+                        $coin_currency = $currencies->get_coin_crypto_currencies($currency_code);
+                        $coin_currency = array_shift($coin_currency);
+                    }
 
                     $amount = intval(number_format($purchase_data['price'], $coin_currency['decimalPlaces'], '', ''));
                     $display_value = $purchase_data['price'];
